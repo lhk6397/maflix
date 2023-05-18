@@ -2,10 +2,10 @@ import axios from "axios";
 import { NextPageContext } from "next";
 import { getSession } from "next-auth/react";
 
-import Navbar from "@/components/global/Navbar";
 import Banner from "@/components/home/Banner";
 import { IMovie } from "@/types";
 import Slider from "@/components/home/Slider";
+import Layout from "@/components/layout";
 
 interface HomeProps {
   nowPlaying: IMovie[];
@@ -51,8 +51,7 @@ export default function Home({
   upcoming,
 }: HomeProps) {
   return (
-    <>
-      <Navbar />
+    <Layout>
       <Banner movie={nowPlaying[0]} />
       <main>
         <Slider data={nowPlaying} topic="Now Playing" />
@@ -60,6 +59,6 @@ export default function Home({
         <Slider data={topRated} topic="Top Rated" />
         <Slider data={upcoming} topic="Upcoming" />
       </main>
-    </>
+    </Layout>
   );
 }
