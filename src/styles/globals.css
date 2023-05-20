@@ -13,3 +13,15 @@ body {
 html {
   @apply h-full;
 }
+
+@layer components {
+  .banner-gradient {
+    background: rgb(20, 20, 20);
+    background: linear-gradient(
+      360deg,
+      rgba(20, 20, 20, 1) 0%,
+      rgba(128, 128, 128, 0) 50%,
+      rgba(20, 20, 20, 1) 100%
+    );
+  }
+}

@@ -67,7 +67,12 @@ const Navbar = () => {
         />
         <div className="flex-row ml-8 gap-7 hidden lg:flex">
           {menuList.map((menu, idx) => (
-            <NavbarItem label={menu} key={idx} active={menu === "Home"} />
+            <NavbarItem
+              label={menu.title}
+              key={idx}
+              active={menu.link === router.pathname}
+              route={menu.link}
+            />
           ))}
         </div>
         <div

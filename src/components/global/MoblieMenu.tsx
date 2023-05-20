@@ -18,7 +18,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ visible }) => {
             key={idx}
             className="px-3 text-center text-white hover:underline"
           >
-            {menu}
+            {menu.title}
           </div>
         ))}
       </div>

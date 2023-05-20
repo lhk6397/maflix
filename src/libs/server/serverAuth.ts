@@ -14,6 +14,10 @@ const serverAuth = async (req: NextApiRequest) => {
     where: {
       email: session.user.email,
     },
+    include: {
+      likeMovies: true,
+      likeSeries: true,
+    },
   });
 
   if (!currentUser) {

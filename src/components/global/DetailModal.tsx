@@ -1,28 +1,22 @@
 import { motion } from "framer-motion";
 import useSWR from "swr";
-import { IMovie } from "@/types";
+import { IMovieDetail, ITvDetail, isDetailMovie } from "@/types";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { makeImagePath } from "@/libs/client/makeImagePath";
 import { HiPlay } from "react-icons/hi2";
 import { AiOutlineDislike, AiOutlineLike } from "react-icons/ai";
 
-interface genre {
-  id: number;
-  name: string;
-}
-
-interface MovieDetail extends Omit<IMovie, "genre_ids"> {
-  genres: genre[];
-}
-
-const MovieModal = () => {
+const DetailModal = () => {
   const router = useRouter();
-  const { movieId } = router.query;
-  const { data, isLoading, error } = useSWR<MovieDetail>(
-    `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
-  );
+  const { movieId, seriesId } = router.query;
+  const url = movieId
+    ? `https://api.themoviedb.org/3/movie/${movieId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`
+    : `https://api.themoviedb.org/3/tv/${seriesId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`;
+  const { data, isLoading, error } = useSWR<IMovieDetail | ITvDetail>(url);
+
   console.log(data);
+
   return (
     <>
       {isLoading && "Loading..."}
@@ -34,10 +28,10 @@ const MovieModal = () => {
               height={200}
               className="w-full"
               src={makeImagePath(data.backdrop_path)}
-              alt={data?.original_title}
+              alt={isDetailMovie(data) ? data.original_title : data.name}
             />
             <h1 className="text-6xl absolute bottom-10 left-10 font-bold">
-              {data.original_title}
+              {isDetailMovie(data) ? data.original_title : data.name}
             </h1>
           </div>
 
@@ -57,7 +51,11 @@ const MovieModal = () => {
 
             <div className="text-sm flex space-x-2 mt-10">
               <span className="text-green-700">평점: {data.vote_average}</span>
-              <span>{data?.release_date?.slice(0, 4)}</span>
+              <span>
+                {isDetailMovie(data)
+                  ? data.release_date?.slice(0, 4)
+                  : data.first_air_date?.slice(0, 4)}
+              </span>
             </div>
 
             <div className="text-sm mt-2 flex space-x-1 flex-wrap">
@@ -70,7 +68,7 @@ const MovieModal = () => {
               ))}
             </div>
 
-            {data.adult && (
+            {isDetailMovie(data) && data.adult && (
               <span className="px-2 py-1 text-red border border-red-600">
                 19+
               </span>
@@ -84,4 +82,4 @@ const MovieModal = () => {
   );
 };
 
-export default MovieModal;
+export default DetailModal;
