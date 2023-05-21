@@ -15,8 +15,6 @@ const DetailModal = () => {
     : `https://api.themoviedb.org/3/tv/${seriesId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`;
   const { data, isLoading, error } = useSWR<IMovieDetail | ITvDetail>(url);
 
-  console.log(data);
-
   return (
     <>
       {isLoading && "Loading..."}

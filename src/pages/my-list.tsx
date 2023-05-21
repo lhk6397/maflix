@@ -1,20 +1,18 @@
 import Layout from "@/components/layout";
-import { IMovie, IMovieDetail, ITv, ITvDetail } from "@/types";
-import { NextPageContext } from "next";
+import { IMovie, IMovieDetail, IProfile, ITv, ITvDetail, IUser } from "@/types";
+import { GetServerSidePropsContext } from "next";
 import React from "react";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { makeImagePath } from "@/libs/client/makeImagePath";
-import Info from "@/components/global/Info";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import prismadb from "@/libs/server/prismadb";
-import { getSession } from "next-auth/react";
+import client from "@/libs/server/prismadb";
 import axios from "axios";
+import ItemCard from "@/components/ItemCard";
+import { getServerSession } from "next-auth";
+import { authOption } from "./api/auth/[...nextauth]";
 
-export async function getServerSideProps(context: NextPageContext) {
-  const session = await getSession(context);
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const session = await getServerSession(context.req, context.res, authOption);
 
-  if (!session?.user?.email) {
+  if (!session?.user.email) {
     return {
       redirect: {
         destination: "/auth",
@@ -23,9 +21,13 @@ export async function getServerSideProps(context: NextPageContext) {
     };
   }
 
-  const currentUser = await prismadb.user.findUnique({
+  if (!session?.user.currentProfile) {
+    throw new Error("프로필 선택 필요.");
+  }
+
+  const currentProfile = await client.profile.findUnique({
     where: {
-      email: session.user.email,
+      id: session?.user.currentProfile,
     },
     include: {
       likeMovies: true,
@@ -33,7 +35,7 @@ export async function getServerSideProps(context: NextPageContext) {
     },
   });
 
-  if (!currentUser)
+  if (!currentProfile)
     return {
       redirect: {
         destination: "/auth",
@@ -44,7 +46,7 @@ export async function getServerSideProps(context: NextPageContext) {
   let likedMovies: any[] = [];
   let likedSeries: any[] = [];
 
-  for (const like of currentUser?.likeMovies) {
+  for (const like of currentProfile?.likeMovies) {
     const url = `https://api.themoviedb.org/3/movie/${like.movieId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`;
     const res = await axios.get(url);
     if (res.data) {
@@ -52,7 +54,7 @@ export async function getServerSideProps(context: NextPageContext) {
     }
   }
 
-  for (const like of currentUser?.likeSeries) {
+  for (const like of currentProfile?.likeSeries) {
     const url = `https://api.themoviedb.org/3/tv/${like.seriesId}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`;
     const res = await axios.get(url);
     if (res.data) {
@@ -73,26 +75,10 @@ interface Props {
 }
 
 const Page = ({ likedMovies, likedSeries }: Props) => {
-  const { data: currentUser } = useCurrentUser();
-  console.log(currentUser);
-  const boxVariants = {
-    normal: {
-      scale: 1,
-    },
-    hover: {
-      scale: 1.3,
-      y: -50,
-      transition: {
-        delay: 0.5,
-        duration: 0.3,
-        type: "tween",
-      },
-    },
-  };
-
+  const { data: current } = useCurrentUser();
   return (
     <Layout>
-      {currentUser && (
+      {current && (
         <div className="py-[200px] px-[30px] space-y-32">
           <div className="space-y-10">
             <h3 className="text-2xl text-primary-white-300">
@@ -102,31 +88,11 @@ const Page = ({ likedMovies, likedSeries }: Props) => {
               <>
                 <div className="grid gap-x-[10px] grid-cols-6 gap-y-10">
                   {likedMovies.map((movie) => (
-                    <motion.div
-                      layoutId={movie.id + ""}
+                    <ItemCard
+                      item={movie as Omit<IMovie, "genre_ids"> as IMovie}
                       key={movie.id}
-                      whileHover="hover"
-                      initial="normal"
-                      variants={boxVariants}
-                      transition={{ type: "tween" }}
-                      className="cursor-pointer relative bg-cover bg-center h-[150px] text-[66px] first:origin-left last:origin-right hover:z-10 rounded-md overflow-hidden"
-                    >
-                      {movie.backdrop_path ? (
-                        <Image
-                          src={makeImagePath(movie?.backdrop_path, "w500")}
-                          alt={movie.title}
-                          fill
-                        />
-                      ) : (
-                        "No Image"
-                      )}
-                      <Info
-                        data={movie as Omit<IMovie, "genre_ids"> as IMovie}
-                        likeMovies={currentUser.likeMovies}
-                        likeSeries={currentUser.likeSeries}
-                        genres={movie.genres}
-                      />
-                    </motion.div>
+                      genres={movie.genres}
+                    />
                   ))}
                 </div>
               </>
@@ -144,31 +110,11 @@ const Page = ({ likedMovies, likedSeries }: Props) => {
               <>
                 <div className="grid gap-x-[10px] grid-cols-6 gap-y-10">
                   {likedSeries.map((series) => (
-                    <motion.div
-                      layoutId={series.id + ""}
+                    <ItemCard
+                      item={series as Omit<ITv, "genre_ids"> as ITv}
                       key={series.id}
-                      whileHover="hover"
-                      initial="normal"
-                      variants={boxVariants}
-                      transition={{ type: "tween" }}
-                      className="cursor-pointer relative bg-cover bg-center h-[150px] text-[66px] first:origin-left last:origin-right hover:z-10 rounded-md overflow-hidden"
-                    >
-                      {series.backdrop_path ? (
-                        <Image
-                          src={makeImagePath(series?.backdrop_path, "w500")}
-                          alt={series.name}
-                          fill
-                        />
-                      ) : (
-                        "No Image"
-                      )}
-                      <Info
-                        data={series as Omit<ITv, "genre_ids"> as ITv}
-                        likeMovies={currentUser.likeMovies}
-                        likeSeries={currentUser.likeSeries}
-                        genres={series.genres}
-                      />
-                    </motion.div>
+                      genres={series.genres}
+                    />
                   ))}
                 </div>
               </>

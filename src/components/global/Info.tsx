@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineDislike, AiOutlineDown, AiOutlineLike } from "react-icons/ai";
 import { motion } from "framer-motion";
 import { IGenre, ILike, IMovie, ITv, isMovie } from "@/types";
 import { useRouter } from "next/router";
 import { HiPlay } from "react-icons/hi2";
-import axios from "axios";
 import genresList from "@/data/genresList";
+import useMutation from "@/hooks/useMutation";
 
 type Props = {
   data: IMovie | ITv;
@@ -14,41 +14,62 @@ type Props = {
   genres?: IGenre[];
 };
 
+interface MutationResult {
+  ok: boolean;
+}
+
 const Info = ({ data, likeMovies, likeSeries, genres }: Props) => {
   const router = useRouter();
-  const isLiked = isMovie(data)
-    ? likeMovies.find((like) => like.movieId === data.id + "") !== undefined
-    : likeSeries.find((like) => like.seriesId === data.id + "") !== undefined;
+
+  const [like, { loading: likeLoading, data: likeResult }] =
+    useMutation<MutationResult>(
+      isMovie(data) ? "/api/movie/like" : "/api/series/like"
+    );
+  const [dislike, { loading: dislikeLoading, data: dislikeResult }] =
+    useMutation<MutationResult>(
+      isMovie(data) ? "/api/movie/dislike" : "/api/series/dislike"
+    );
+
+  const [isLiked, setIsLiked] = useState(
+    isMovie(data)
+      ? likeMovies.find((like) => like.movieId === data.id + "") !== undefined
+      : likeSeries.find((like) => like.seriesId === data.id + "") !== undefined
+  );
   const onBoxClicked = (data: IMovie | ITv) =>
     router.push(isMovie(data) ? `?movieId=${data.id}` : `?seriesId=${data.id}`);
+
   const onLikeCliked = async () => {
-    const result = await (
-      await axios.post(isMovie(data) ? "/api/movie/like" : "/api/series/like", {
-        dataId: data.id,
-      })
-    ).data;
-    if (result.ok) {
-    } else {
-      throw new Error(
-        "서버 상의 오류로 실패하였습니다. 잠시 후 다시 시도해주십시오."
-      );
-    }
+    if (likeLoading) return;
+    like({ dataId: data.id });
   };
 
-  const onDisLikeCliked = async () => {
-    const result = await (
-      await axios.post(
-        isMovie(data) ? "/api/movie/dislike" : "/api/series/dislike",
-        { dataId: data.id }
-      )
-    ).data;
-
-    if (result.ok) {
-    } else {
-      throw new Error(
-        "서버 상의 오류로 실패하였습니다. 잠시 후 다시 시도해주십시오."
-      );
+  useEffect(() => {
+    if (likeResult) {
+      if (likeResult?.ok) {
+        setIsLiked(true);
+      } else {
+        throw new Error(
+          "서버 상의 오류로 실패하였습니다. 잠시 후 다시 시도해주십시오."
+        );
+      }
     }
+  }, [likeResult]);
+
+  useEffect(() => {
+    if (dislikeResult) {
+      if (dislikeResult?.ok) {
+        setIsLiked(false);
+      } else {
+        throw new Error(
+          "서버 상의 오류로 실패하였습니다. 잠시 후 다시 시도해주십시오."
+        );
+      }
+    }
+  }, [dislikeResult]);
+
+  const onDisLikeCliked = async () => {
+    if (dislikeLoading) return;
+    dislike({ dataId: data.id });
   };
 
   const infoVariants = {
@@ -65,7 +86,7 @@ const Info = ({ data, likeMovies, likeSeries, genres }: Props) => {
   return (
     <motion.div
       variants={infoVariants}
-      className="p-[10px] bg-primary-black-600 text-white opacity-0 absolute w-full bottom-0 flex flex-col space-y-3"
+      className="p-[10px] bg-primary-black-600 text-white opacity-0  w-full  flex flex-col space-y-3"
     >
       <h4 className="text-base">{isMovie(data) ? data.title : data.name}</h4>
       <div className="flex justify-between">

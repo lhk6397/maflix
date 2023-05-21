@@ -1,6 +1,7 @@
-import serverAuth from "@/libs/server/serverAuth";
 import { NextApiRequest, NextApiResponse } from "next";
 import client from "@/libs/server/prismadb";
+import { getServerSession } from "next-auth";
+import { authOption } from "../auth/[...nextauth]";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,15 +12,15 @@ export default async function handler(
   }
 
   try {
-    const { currentUser } = await serverAuth(req);
+    const session = await getServerSession(req, res, authOption);
     const { dataId } = req.body;
 
-    if (!currentUser)
+    if (!session || !session.user.currentProfile)
       return res.status(401).json({ error: "로그인이 필요합니다." });
 
-    const like = await client.likeSeries.create({
+    await client.likeSeries.create({
       data: {
-        userId: currentUser.id,
+        profileId: session?.user.currentProfile,
         seriesId: dataId + "",
       },
     });

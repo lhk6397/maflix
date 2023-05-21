@@ -1,9 +1,4 @@
-import React, {
-  HTMLInputTypeAttribute,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BsChevronDown, BsSearch, BsBell } from "react-icons/bs";
 import { motion } from "framer-motion";
 
@@ -12,11 +7,13 @@ import NavbarItem from "@/components/global/NavbarItem";
 import AccountMenu from "@/components/global/AccountMenu";
 import menuList from "@/data/menuList";
 import { useRouter } from "next/router";
+import useCurrentUser from "@/hooks/useCurrentUser";
 
 const TOP_OFFSET = 66;
 
 const Navbar = () => {
   const router = useRouter();
+  const { data: current } = useCurrentUser();
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAccountMenu, setShowAccountMenu] = useState(false);
@@ -123,7 +120,9 @@ const Navbar = () => {
             className="flex flex-row items-center gap-2 cursor-pointer relative"
           >
             <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
-              <img src="/images/default-blue.png" alt="" />
+              {current && (
+                <img src={current.profile.image} alt="프로필 이미지" />
+              )}
             </div>
             <BsChevronDown
               className={`w-4 text-white fill-white transition ${

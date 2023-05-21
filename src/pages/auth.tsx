@@ -1,28 +1,35 @@
 import axios from "axios";
 import { useCallback, useState } from "react";
-// import { NextPageContext } from 'next';
-import { getSession, signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 
 import Input from "@/components/Input";
+import useMutation from "@/hooks/useMutation";
+import { GetServerSidePropsContext } from "next";
+import { getServerSession } from "next-auth";
+import { authOption } from "./api/auth/[...nextauth]";
 
-// export async function getServerSideProps(context: NextPageContext) {
-//   const session = await getSession(context);
+interface RegisterResult {
+  ok: boolean;
+}
 
-//   if (session) {
-//     return {
-//       redirect: {
-//         destination: '/',
-//         permanent: false,
-//       }
-//     }
-//   }
+export async function getServerSideProps(context: GetServerSidePropsContext) {
+  const session = await getServerSession(context.req, context.res, authOption);
 
-//   return {
-//     props: {}
-//   }
-// }
+  if (session) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {},
+  };
+}
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -30,6 +37,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
 
   const [variant, setVariant] = useState("login");
+
+  const [registerSubmit, { loading, data, error }] =
+    useMutation<RegisterResult>("/api/register");
 
   const toggleVariant = useCallback(() => {
     setVariant((currentVariant) =>
@@ -50,18 +60,20 @@ const Auth = () => {
   }, [email, password]);
 
   const register = useCallback(async () => {
+    if (loading) return;
     try {
-      await axios.post("/api/register", {
+      registerSubmit({
         email,
         name,
         password,
       });
-
-      login();
+      if (data?.ok) {
+        login();
+      }
     } catch (error) {
       console.log(error);
     }
-  }, [email, name, password, login]);
+  }, [loading, registerSubmit, email, name, password, data?.ok, login]);
 
   return (
     <div className="relative h-full w-full bg-[url('/images/hero.jpg')] bg-no-repeat bg-center bg-fixed bg-cover">

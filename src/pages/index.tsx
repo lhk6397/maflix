@@ -1,11 +1,12 @@
 import axios from "axios";
-import { NextPageContext } from "next";
-import { getSession } from "next-auth/react";
+import { GetServerSidePropsContext } from "next";
 
 import Banner from "@/components/home/Banner";
 import { IMovie } from "@/types";
 import Slider from "@/components/home/Slider";
 import Layout from "@/components/layout";
+import { getServerSession } from "next-auth";
+import { authOption } from "./api/auth/[...nextauth]";
 
 interface HomeProps {
   nowPlaying: IMovie[];
@@ -14,13 +15,13 @@ interface HomeProps {
   upcoming: IMovie[];
 }
 
-export async function getServerSideProps(context: NextPageContext) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const BASE_PATH = "https://api.themoviedb.org/3";
   const nowPlayingUrl = `${BASE_PATH}/movie/now_playing?api_key=${process.env.TMDB_API_KEY}&page=1`;
   const popularUrl = `${BASE_PATH}/movie/popular?api_key=${process.env.TMDB_API_KEY}&page=1`;
   const topRatedUrl = `${BASE_PATH}/movie/top_rated?api_key=${process.env.TMDB_API_KEY}&page=1`;
   const upcomingUrl = `${BASE_PATH}/movie/upcoming?api_key=${process.env.TMDB_API_KEY}&page=1`;
-  const session = await getSession(context);
+  const session = await getServerSession(context.req, context.res, authOption);
   const nowPlaying = (await (await axios.get(nowPlayingUrl)).data).results;
   const popular = (await (await axios.get(popularUrl)).data).results;
   const topRated = (await (await axios.get(topRatedUrl)).data).results;

@@ -7,8 +7,9 @@ import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { NextAuthOptions } from "next-auth";
 
-export default NextAuth({
+export const authOption: NextAuthOptions = {
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID || "",
@@ -39,6 +40,9 @@ export default NextAuth({
         const user = await client.user.findUnique({
           where: {
             email: credentials.email,
+          },
+          include: {
+            profiles: true,
           },
         });
 
@@ -71,4 +75,23 @@ export default NextAuth({
     secret: process.env.NEXTAUTH_JWT_SECRET,
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+  callbacks: {
+    async jwt({ token, trigger, session }) {
+      if (trigger === "update" && session?.currentProfile) {
+        token.currentProfile = session.currentProfile;
+      }
+      return token;
+    },
+    async session({ token, session }) {
+      if (token) {
+        session.user.email = token.email;
+        session.user.name = token.name;
+        session.user.image = token.picture;
+        session.user.currentProfile = token.currentProfile;
+      }
+      return session;
+    },
+  },
+};
+
+export default NextAuth(authOption);

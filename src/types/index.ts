@@ -1,3 +1,24 @@
+export interface IUser {
+  createdAt: string;
+  email: string;
+  emailVerified?: string;
+  hashedPassword?: string;
+  id: string;
+  image: string;
+  name: string;
+  profiles?: IProfile[];
+  updatedAt: string;
+}
+
+export interface IProfile {
+  id: string;
+  userId: string;
+  name: string;
+  image: string;
+  likeMovies: ILike[];
+  likeSeries: ILike[];
+}
+
 export interface IMovie {
   adult: boolean;
   backdrop_path: string;
