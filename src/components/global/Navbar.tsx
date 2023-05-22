@@ -121,7 +121,11 @@ const Navbar = () => {
           >
             <div className="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
               {current && (
-                <img src={current.profile.image} alt="프로필 이미지" />
+                <img
+                  className="w-full h-full object-cover"
+                  src={current.profile.image}
+                  alt="프로필 이미지"
+                />
               )}
             </div>
             <BsChevronDown

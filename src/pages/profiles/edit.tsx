@@ -8,6 +8,7 @@ import React, { useState, useEffect } from "react";
 import { authOption } from "../api/auth/[...nextauth]";
 import client from "@/libs/server/prismadb";
 import { IProfile } from "@/types";
+import axios from "axios";
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOption);
   const { profileId } = context.query;
@@ -59,6 +60,16 @@ const Edit = ({ profile }: EditProfileProps) => {
       setAvatarPreview(URL.createObjectURL(file));
     }
   }, [image]);
+
+  const onClickDeleteBtn = async (e: any) => {
+    e.preventDefault();
+    const res = await axios.delete(`/api/profiles?profileId=${profile.id}`);
+    if (res.data?.ok) {
+      router.push("/profiles");
+    } else {
+      throw new Error("서버 오류 발생");
+    }
+  };
 
   const onSubmit = async (e: any) => {
     e.preventDefault();
@@ -135,16 +146,25 @@ const Edit = ({ profile }: EditProfileProps) => {
               </label>
             )}
           </div>
-          <form className="flex flex-col gap-4 w-full" onSubmit={onSubmit}>
-            <input
-              placeholder={profile.name}
-              type="text"
-              id="name"
-              value={name}
-              className="bg-neutral-700 px-6 py-3 rounded-md w-full placeholder:text-primary-white-300"
-              onChange={(e: any) => setName(e.target.value)}
-            />
-          </form>
+          <div className="w-full flex flex-col space-y-4">
+            <form className="flex flex-col gap-4 w-full" onSubmit={onSubmit}>
+              <input
+                placeholder={profile.name}
+                type="text"
+                id="name"
+                required={true}
+                value={name}
+                className="bg-neutral-700 px-6 py-3 rounded-md w-full placeholder:text-primary-white-300"
+                onChange={(e: any) => setName(e.target.value)}
+              />
+            </form>
+            <button
+              className="w-full border-2 border-red-500 text-red-500 hover:text-red-600 hover:border-red-600 py-4"
+              onClick={onClickDeleteBtn}
+            >
+              프로필 삭제
+            </button>
+          </div>
         </div>
 
         <div className="flex space-x-4" onClick={onSubmit}>

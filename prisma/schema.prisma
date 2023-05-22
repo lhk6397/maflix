@@ -19,9 +19,21 @@ model User {
   hashedPassword String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  tokens Token[]
   profiles       Profile[]
   sessions       Session[]
   accounts       Account[]
+}
+
+model Token {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  payload   String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Profile {

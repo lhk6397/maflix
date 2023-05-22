@@ -3,6 +3,7 @@ import React from "react";
 
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { MdOutlineEdit } from "react-icons/md";
+import { FiUser } from "react-icons/fi";
 import { IProfile } from "@/types";
 import { useRouter } from "next/router";
 interface AccountMenuProps {
@@ -28,7 +29,7 @@ const AccountMenu: React.FC<AccountMenuProps> = ({ visible }) => {
                   className="px-3 group/item flex flex-row gap-3 items-center w-full"
                 >
                   <img
-                    className="w-8 rounded-md"
+                    className="w-8 h-8 rounded-md object-cover"
                     src={profile.image}
                     alt="account"
                   />
@@ -42,6 +43,15 @@ const AccountMenu: React.FC<AccountMenuProps> = ({ visible }) => {
               <MdOutlineEdit className="w-8 h-8 text-white" />
               <span className="hover:underline underline-offset-4">
                 프로필 관리
+              </span>
+            </div>
+            <div
+              className="px-3 py-2 flex space-x-2 items-center"
+              onClick={() => router.push("/manageUser")}
+            >
+              <FiUser className="w-8 h-8 text-white" />
+              <span className="hover:underline underline-offset-4">
+                계정 관리
               </span>
             </div>
           </div>

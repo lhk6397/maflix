@@ -35,6 +35,15 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
 
+  if (!session.user.currentProfile) {
+    return {
+      redirect: {
+        destination: "/profiles",
+        permanent: false,
+      },
+    };
+  }
+
   return {
     props: {
       nowPlaying,

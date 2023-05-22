@@ -72,7 +72,9 @@ const DetailModal = () => {
               </span>
             )}
 
-            <p className="mt-4">{data.overview}</p>
+            <p className="mt-4">
+              {data.overview ? data.overview : "등록된 줄거리 소개가 없습니다."}
+            </p>
           </section>
         </motion.div>
       )}

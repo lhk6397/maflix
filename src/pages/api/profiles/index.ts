@@ -49,6 +49,21 @@ export default async function handler(
       return res.status(200).json({
         ok: true,
       });
+    } else if (req.method === "DELETE") {
+      const { profileId } = req.query;
+      const { currentUser } = await serverAuth(req, res);
+      if (!currentUser)
+        return res.status(401).json({ error: "로그인이 필요합니다." });
+
+      await client.profile.delete({
+        where: {
+          id: profileId as string,
+        },
+      });
+
+      return res.status(200).json({
+        ok: true,
+      });
     }
   } catch (error) {
     console.log(error);
